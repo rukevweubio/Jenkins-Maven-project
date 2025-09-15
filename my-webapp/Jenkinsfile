@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-        maven "MAVEN"
-        jdk "JDK-17"
+        maven "MAVEN"       // Jenkins Maven tool
+        jdk "JDK-17"        // Jenkins JDK
     }
 
     environment {
@@ -11,10 +11,10 @@ pipeline {
         DOCKER_TAG = "latest"
         DOCKER_CREDENTIAL_ID = "docker_ubiohub"
         GIT_BRANCH = "main"
+        AWS_REGION= us-east-1
+        ECR_REPO= "059254148810.dkr.ecr.us-east-1.amazonaws.com/my-jenkin-pipeline-maven-webapp"
 
-        AWS_REGION = "us-east-1"
-        ECR_REPO = "059254148810.dkr.ecr.us-east-1.amazonaws.com/my-jenkin-pipeline-maven-webapp"
-
+        // Cache directories
         DEP_CHECK_CACHED_DIR = "${HOME}/dependency-check-data"
         MAVEN_CACHE = "${HOME}/.m2/repository"
         TRIVY_CACHE_DIR = "/var/lib/jenkins/.cache/trivy"
@@ -99,33 +99,50 @@ pipeline {
             }
         }
 
-        stage('Docker Build & Trivy Scan') {
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: "${DOCKER_CREDENTIAL_ID}", 
+                    usernameVariable: 'DOCKER_USERNAME', 
+                    passwordVariable: 'DOCKER_PASSWORD')]) {
+                    
+                    sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
             steps {
                 dir('my-webapp') {
-                    sh """
-                        docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+                    sh "docker build -t $DOCKER_IMAGE:$DOCKER_TAG ."
+                }
+            }
+        }
 
-                        mkdir -p ${TRIVY_CACHE_DIR}
-                        trivy image \
-                            --severity HIGH,CRITICAL \
-                            --exit-code 0 \
-                            --cache-dir ${TRIVY_CACHE_DIR} \
-                            --format table \
-                            -o trivy-report.txt \
-                            $DOCKER_IMAGE:$DOCKER_TAG
+        stage('Trivy Scan') {
+            steps {
+                dir('my-webapp') {
+                    sh"""
+                    trivy image \
+                        --severity HIGH,CRITICAL \
+                        --exit-code 0 \
+                        --cache-dir /var/lib/jenkins/.cache/trivy \
+                        --format table \
+                        -o trivy-report.txt \
+                        rukevweubio/web-application:latest
+
                     """
                 }
             }
             post {
                 always {
-                    archiveArtifacts artifacts: 'my-webapp/trivy-report.txt', fingerprint: true
+                    archiveArtifacts artifacts: 'my-webapp/trivy-report.html', fingerprint: true
                 }
             }
         }
-
         stage('Push Docker Image to ECR') {
             steps {
-                withAWS(credentials: 'aws-jenkins', region: "${AWS_REGION}") {
+                withCredentials(credentials: 'aws-jenkins', region: "${AWS_REGION}") {
                     script {
                         sh """
                             aws ecr get-login-password --region $AWS_REGION | \
@@ -135,6 +152,13 @@ pipeline {
                             docker push $ECR_REPO:$DOCKER_TAG
                         """
                     }
+                }
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+                dir('my-webapp') {
+                    sh "docker push $DOCKER_IMAGE:$DOCKER_TAG"
                 }
             }
         }
