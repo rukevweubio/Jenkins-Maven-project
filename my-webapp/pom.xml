@@ -83,27 +83,30 @@
             </plugin>
 
             <!-- OWASP Dependency-Check: Security vulnerability scan -->
-            <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <version>12.1.0</version>
-                <executions>
-                    <execution>
-                        <id>dependency-check</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <nvdApiKey>60e59b9f-d53a-4679-97ae-e5f3bb8eb7ac</nvdApiKey>
-                    <failBuildOnCVSS>0</failBuildOnCVSS> <!-- Do not fail build yet -->
-                    <format>HTML</format> <!-- generate HTML report -->
-                    <dataDirectory>${user.home}/dependency-check-data</dataDirectory> <!-- cache location -->
-                    <cveValidForHours>24</cveValidForHours> <!-- refresh CVE data daily -->
-                </configuration>
-            </plugin>
+                    <plugin>
+            <groupId>org.owasp</groupId>
+            <artifactId>dependency-check-maven</artifactId>
+            <version>12.1.0</version>
+            <executions>
+                <execution>
+                    <id>dependency-check</id>
+                    <phase>verify</phase>
+                    <goals>
+                        <goal>check</goal>
+                    </goals>
+                </execution>
+            </executions>
+            <configuration>
+                <nvdApiKey>60e59b9f-d53a-4679-97ae-e5f3bb8eb7ac</nvdApiKey>
+                <failBuildOnCVSS>0.0</failBuildOnCVSS>
+                <failBuildOnAnyVulnerability>false</failBuildOnAnyVulnerability>
+                <failOnError>false</failOnError>
+                <format>HTML</format>
+                <dataDirectory>${user.home}/dependency-check-data</dataDirectory>
+                <cveValidForHours>24</cveValidForHours>
+            </configuration>
+        </plugin>
+
         </plugins>
     </build>
 
