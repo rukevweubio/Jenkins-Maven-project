@@ -3,7 +3,7 @@ pipeline {
 
     tools {
         maven "MAVEN"   // Must match Jenkins Maven tool configuration
-        jdk "JDK-17"    // Optional, make sure JDK is configured in Jenkins
+       
     }
 
     environment {
