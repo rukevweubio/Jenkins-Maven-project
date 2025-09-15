@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-        maven "MAVEN"   // Must match Jenkins Maven tool configuration
-        jdk "JDK-17"    // Use JDK 17 installed in Jenkins
+        maven "MAVEN"       // Jenkins Maven tool
+        jdk "JDK-17"        // Jenkins JDK
     }
 
     environment {
@@ -15,6 +15,7 @@ pipeline {
         // Persistent cache directories
         DEP_CHECK_CACHED_DIR = "${HOME}/dependency-check-data"
         MAVEN_CACHE = "${HOME}/.m2/repository"
+        TRIVY_CACHE_DIR = "${HOME}/.cache/trivy"
     }
 
     options {
@@ -28,17 +29,10 @@ pipeline {
             }
         }
 
-        stage('Maven Build') {
+        stage('Maven Build & Test') {
             steps {
                 dir('my-webapp') {
-                    sh "mvn clean package -DskipTests -Dmaven.repo.local=${MAVEN_CACHE}"
-                }
-            }
-        }
-
-        stage('Run JUnit Tests') {
-            steps {
-                dir('my-webapp') {
+                    sh "mvn clean package -Dmaven.repo.local=${MAVEN_CACHE}"
                     sh "mvn test -Dmaven.repo.local=${MAVEN_CACHE}"
                 }
             }
@@ -82,7 +76,7 @@ pipeline {
         stage('Docker Login') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'docker_ubiohub', 
+                    credentialsId: "${DOCKER_CREDENTIAL_ID}", 
                     usernameVariable: 'DOCKER_USERNAME', 
                     passwordVariable: 'DOCKER_PASSWORD')]) {
                     
@@ -93,15 +87,26 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                dir('my-webapp'){
+                dir('my-webapp') {
                     sh "docker build -t $DOCKER_IMAGE:$DOCKER_TAG ."
+                }
+            }
+        }
+
+        stage('Trivy Scan') {
+            steps {
+                dir('my-webapp') {
+                    sh """
+                        mkdir -p ${TRIVY_CACHE_DIR}
+                        trivy image --severity HIGH,CRITICAL --exit-code 1 --cache-dir ${TRIVY_CACHE_DIR} $DOCKER_IMAGE:$DOCKER_TAG
+                    """
                 }
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                dir('my-webapp'){
+                dir('my-webapp') {
                     sh "docker push $DOCKER_IMAGE:$DOCKER_TAG"
                 }
             }
