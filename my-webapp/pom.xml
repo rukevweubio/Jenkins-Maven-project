@@ -96,7 +96,7 @@
                 </executions>
                 <configuration>
                     <nvdApiKey>60e59b9f-d53a-4679-97ae-e5f3bb8eb7ac</nvdApiKey>
-                    <failBuildOnCVSS>7</failBuildOnCVSS> <!-- fail build on high severity CVEs -->
+                    <failBuildOnCVSS>0</failBuildOnCVSS> <!-- fail build on high severity CVEs -->
                     <format>HTML</format> <!-- generate HTML report -->
                     <dataDirectory>${user.home}/dependency-check-data</dataDirectory> <!-- cache location -->
                 </configuration>
