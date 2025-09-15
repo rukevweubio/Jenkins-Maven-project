@@ -9,7 +9,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "rukevweubio/web-application"
         DOCKER_TAG = "latest"
-        DOCKER_CREDENTIAL_ID = "docker_hub"
+        DOCKER_CREDENTIAL_ID = "docker_ubiohub"
         GIT_BRANCH = "main"
 
         // Persistent cache directories
@@ -82,7 +82,7 @@ pipeline {
         stage('Docker Login') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'docker_hub', 
+                    credentialsId: 'docker_ubiohub', 
                     usernameVariable: 'DOCKER_USERNAME', 
                     passwordVariable: 'DOCKER_PASSWORD')]) {
                     
