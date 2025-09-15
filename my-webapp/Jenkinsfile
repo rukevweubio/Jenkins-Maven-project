@@ -3,6 +3,7 @@ pipeline {
 
     tools {
         maven "MAVEN"   // Must match Jenkins Maven tool configuration
+        jdk "JDK-17"    // Use JDK 17 installed in Jenkins
     }
 
     environment {
@@ -10,7 +11,6 @@ pipeline {
         DOCKER_TAG = "latest"
         DOCKER_CREDENTIAL_ID = "docker_hub"
         GIT_BRANCH = "main"
-        JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64"
     }
 
     stages {
@@ -20,22 +20,38 @@ pipeline {
             }
         }
 
-        stage('Maven Build the Web Application') {
+        stage('Maven Build') {
             steps {
                 dir('my-webapp') {
-                    script {
-                        sh "mvn clean package -DskipTests"
-                    }
+                    sh "mvn clean package -DskipTests"
                 }
             }
         }
 
-        stage('Maven Test') {
+        stage('Run JUnit Tests') {
             steps {
                 dir('my-webapp') {
-                    script {
-                        sh "mvn test"
-                    }
+                    sh "mvn test"
+                }
+            }
+            post {
+                always {
+                    // Publish JUnit test results
+                    junit 'my-webapp/target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        stage('JaCoCo Coverage') {
+            steps {
+                dir('my-webapp') {
+                    sh "mvn jacoco:report"
+                }
+            }
+            post {
+                always {
+                    // Publish JaCoCo coverage report
+                    jacoco execPattern: 'my-webapp/target/jacoco.exec', classPattern: 'my-webapp/target/classes', sourcePattern: 'my-webapp/src/main/java', exclusionPattern: ''
                 }
             }
         }
