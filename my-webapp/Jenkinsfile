@@ -138,17 +138,13 @@ pipeline {
                 }
             }
         }
-         stages {
-        stage('Test AWS CLI') {
-            steps {
-                sh 'aws --version'
-                sh 'aws sts get-caller-identity'
-            }
-        }
 
-        stage('Docker Push to ECR') {
+        stage('Push Docker Image to AWS ECR') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'aws-jenkins', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                withCredentials([usernamePassword(
+                    credentialsId: 'aws-jenkins', 
+                    usernameVariable: 'AWS_ACCESS_KEY_ID', 
+                    passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh """
                         aws ecr describe-repositories --repository-names my-jenkin-pipeline-maven-webapp || \
                         aws ecr create-repository --repository-name my-jenkin-pipeline-maven-webapp
@@ -162,7 +158,5 @@ pipeline {
                 }
             }
         }
-    }
-
     }
 }
