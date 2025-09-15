@@ -21,6 +21,8 @@
 
     <properties>
         <java.version>17</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
     <dependencies>
@@ -96,12 +98,12 @@
                 </executions>
                 <configuration>
                     <nvdApiKey>60e59b9f-d53a-4679-97ae-e5f3bb8eb7ac</nvdApiKey>
-                    <failBuildOnCVSS>0</failBuildOnCVSS> <!-- fail build on high severity CVEs -->
+                    <failBuildOnCVSS>0</failBuildOnCVSS> <!-- Do not fail build yet -->
                     <format>HTML</format> <!-- generate HTML report -->
                     <dataDirectory>${user.home}/dependency-check-data</dataDirectory> <!-- cache location -->
+                    <cveValidForHours>24</cveValidForHours> <!-- refresh CVE data daily -->
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 
