@@ -1,6 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.example</groupId>
@@ -29,7 +30,7 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Testing -->
+        <!-- Spring Boot Test (JUnit 5) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -79,27 +80,27 @@
                 </executions>
             </plugin>
 
-            <!-- OWASP Dependency Check: Security vulnerability scan -->
-                        <plugin>
-            <groupId>org.owasp</groupId>
-            <artifactId>dependency-check-maven</artifactId>
-            <version>12.1.0</version>
-            <executions>
-                <execution>
-                    <id>dependency-check</id>
-                    <phase>verify</phase>
-                    <goals>
-                        <goal>check</goal>
-                    </goals>
-                </execution>
-            </executions>
-            <configuration>
-                <nvdApiKey>60e59b9f-d53a-4679-97ae-e5f3bb8eb7ac</nvdApiKey>
-                <failBuildOnCVSS>7</failBuildOnCVSS> <!-- optional: fail build on high severity -->
-                <format>HTML</format> <!-- optional: generate HTML report -->
-            </configuration>
-        </plugin>
-
+            <!-- OWASP Dependency-Check: Security vulnerability scan -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>12.1.0</version>
+                <executions>
+                    <execution>
+                        <id>dependency-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <nvdApiKey>60e59b9f-d53a-4679-97ae-e5f3bb8eb7ac</nvdApiKey>
+                    <failBuildOnCVSS>7</failBuildOnCVSS> <!-- fail build on high severity CVEs -->
+                    <format>HTML</format> <!-- generate HTML report -->
+                    <dataDirectory>${user.home}/dependency-check-data</dataDirectory> <!-- cache location -->
+                </configuration>
+            </plugin>
 
         </plugins>
     </build>

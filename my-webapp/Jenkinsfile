@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        maven "MAVEN"   // Ensure this matches the Jenkins Maven tool configuration
+        maven "MAVEN"   // Must match Jenkins Maven tool configuration
         jdk "JDK-17"    // Use JDK 17 installed in Jenkins
     }
 
@@ -11,12 +11,19 @@ pipeline {
         DOCKER_TAG = "latest"
         DOCKER_CREDENTIAL_ID = "docker_hub"
         GIT_BRANCH = "main"
+
+        // Persistent cache directories
+        DEP_CHECK_CACHED_DIR = "${HOME}/dependency-check-data"
+        MAVEN_CACHE = "${HOME}/.m2/repository"
+    }
+
+    options {
+        skipDefaultCheckout()
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the specified branch from Git
                 git branch: "${GIT_BRANCH}", url: "https://github.com/rukevweubio/Jenkins-Maven-Docker-ECR-Pipeline.git"
             }
         }
@@ -24,8 +31,7 @@ pipeline {
         stage('Maven Build') {
             steps {
                 dir('my-webapp') {
-                    // Build the Maven project, skipping tests
-                    sh "mvn clean package -DskipTests"
+                    sh "mvn clean package -DskipTests -Dmaven.repo.local=${MAVEN_CACHE}"
                 }
             }
         }
@@ -33,13 +39,11 @@ pipeline {
         stage('Run JUnit Tests') {
             steps {
                 dir('my-webapp') {
-                    // Execute the unit tests
-                    sh "mvn test"
+                    sh "mvn test -Dmaven.repo.local=${MAVEN_CACHE}"
                 }
             }
             post {
                 always {
-                    // Publish JUnit test results
                     junit 'my-webapp/target/surefire-reports/*.xml'
                 }
             }
@@ -48,47 +52,60 @@ pipeline {
         stage('JaCoCo Coverage') {
             steps {
                 dir('my-webapp') {
-                    // Generate JaCoCo coverage report
-                    sh "mvn jacoco:report"
+                    sh "mvn jacoco:report -Dmaven.repo.local=${MAVEN_CACHE}"
                 }
             }
             post {
                 always {
-                    // Publish JaCoCo coverage report
-                    jacoco execPattern: 'my-webapp/target/jacoco.exec', classPattern: 'my-webapp/target/classes', sourcePattern: 'my-webapp/src/main/java', exclusionPattern: ''
+                    jacoco execPattern: 'my-webapp/target/jacoco.exec',
+                           classPattern: 'my-webapp/target/classes',
+                           sourcePattern: 'my-webapp/src/main/java'
                 }
             }
         }
 
-        stage('Dependency Check') {
+        stage('Dependency Check (Cached)') {
             steps {
                 dir('my-webapp') {
-                    // Run OWASP Dependency-Check
-                    sh "mvn org.owasp:dependency-check-maven:check"
-                }
-            }
-            post {
-                always {
-                    // Archive Dependency-Check report
-                    publishHTML(target: [
-                        allowMissing: true,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'my-webapp/target/dependency-check-report',
-                        reportFiles: 'dependency-check-report.html',
-                        reportName: 'OWASP Dependency-Check Report'
-                    ])
+                    sh """
+                        # Create cache directory if not exists
+                        mkdir -p ${DEP_CHECK_CACHED_DIR}
+                        
+                        # Run OWASP Dependency-Check using cached DB
+                        mvn org.owasp:dependency-check-maven:check \
+                            -Dnvd.api.key=60e59b9f-d53a-4679-97ae-e5f3bb8eb7ac \
+                            -DdataDirectory=${DEP_CHECK_CACHED_DIR} \
+                            -Dmaven.repo.local=${MAVEN_CACHE} \
+                            -Dformat=HTML \
+                            -DfailBuildOnCVSS=7
+                    """
                 }
             }
         }
 
-        // Additional stages can be added here, like Docker Build and Deployment if needed.
-    }
+        // stage('Docker Build & Push') {
+        //     steps {
+        //         script {
+        //             sh """
+        //                 docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} my-webapp
+        //                 echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin
+        //                 docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+        //             """
+        //         }
+        //     }
+        // }
+    // }
 
-    post {
-        always {
-            // Clean up workspace after the pipeline run
-            cleanWs()
-        }
+    // // post {
+    // //     always {
+    // //         echo "Workspace cleanup completed."
+    // //         cleanWs()
+    // //     }
+    // //     success {
+    // //         echo "Pipeline finished successfully!"
+    // //     }
+    // //     failure {
+    // //         echo "Pipeline failed! Check console output for errors."
+    //     }
     }
 }
