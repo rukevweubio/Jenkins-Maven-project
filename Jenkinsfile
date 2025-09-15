@@ -1,41 +1,41 @@
-pipeline{
-    agent any 
-    
-    tool{
-        maven "MAVEN"
+pipeline {
+    agent any
+
+    tools {
+        maven "MAVEN"   // Must match Jenkins Maven tool configuration
+        jdk "JDK-17"    // Optional, make sure JDK is configured in Jenkins
     }
 
-    environment{
-        DOCKER_IMAGE: rukevweubio/web-application
-        DOCKER_TAG: latest 
-        DOCKER_CREDENTAIL_ID: docker_hub
-        GIT_BRANCH: main
-        KUBE_CONFIG_CREDENTIALS_ID = 'kube-config-credentials' 
-        KUBE_NAMESPACE = 'default' // Adjust as necessary
-        SONARQUBE_URL = 'http://your-sonarqube-url' 
-        SONARQUBE_TOKEN = credentials('sonarqube-token') 
-        GIT_BRANCH = 'feature-branch' 
+    environment {
+        DOCKER_IMAGE = "rukevweubio/web-application"
+        DOCKER_TAG = "latest"
+        DOCKER_CREDENTIAL_ID = "docker_hub"
+        GIT_BRANCH = "feature-branch"
+        KUBE_CONFIG_CREDENTIALS_ID = "kube-config-credentials"
+        KUBE_NAMESPACE = "default"
+        SONARQUBE_URL = "http://your-sonarqube-url"
+        SONARQUBE_TOKEN = credentials("sonarqube-token")
     }
 
-    stages{
-        stage(Checkout){
-            steps{
-                git branch : "${GIT_BRANCH}", url: "https://github.com/rukevweubio/Jenkins-Maven-Docker-ECR-Pipeline"
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: "${GIT_BRANCH}", url: "https://github.com/rukevweubio/Jenkins-Maven-Docker-ECR-Pipeline.git"
             }
         }
-           
-        stage("maven build the web application" ){
-            steps{
-                script{
-                    sh" maven clean package --Detestskip"
+
+        stage('Maven Build the Web Application') {
+            steps {
+                script {
+                    sh "mvn clean package -DskipTests"
                 }
             }
         }
 
-        stage("mavne test " ){
-            steps{
-                script{
-                    sh" maven test"
+        stage('Maven Test') {
+            steps {
+                script {
+                    sh "mvn test"
                 }
             }
         }
