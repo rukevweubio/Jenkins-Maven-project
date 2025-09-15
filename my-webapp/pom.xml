@@ -23,6 +23,10 @@
         <java.version>17</java.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+
+        <!-- SonarCloud Configuration -->
+        <sonar.organization>rukevweubio-1</sonar.organization>
+        <sonar.projectKey>rukevweubio_Jenkins-Maven-Docker-ECR-Pipeline</sonar.projectKey>
     </properties>
 
     <dependencies>
@@ -83,30 +87,29 @@
             </plugin>
 
             <!-- OWASP Dependency-Check: Security vulnerability scan -->
-                    <plugin>
-            <groupId>org.owasp</groupId>
-            <artifactId>dependency-check-maven</artifactId>
-            <version>12.1.0</version>
-            <executions>
-                <execution>
-                    <id>dependency-check</id>
-                    <phase>verify</phase>
-                    <goals>
-                        <goal>check</goal>
-                    </goals>
-                </execution>
-            </executions>
-            <configuration>
-                <nvdApiKey>60e59b9f-d53a-4679-97ae-e5f3bb8eb7ac</nvdApiKey>
-                <failBuildOnCVSS>12.0</failBuildOnCVSS>
-                <failBuildOnAnyVulnerability>false</failBuildOnAnyVulnerability>
-                <failOnError>false</failOnError>
-                <format>HTML</format>
-                <dataDirectory>${user.home}/dependency-check-data</dataDirectory>
-                <cveValidForHours>24</cveValidForHours>
-            </configuration>
-        </plugin>
-
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>12.1.0</version>
+                <executions>
+                    <execution>
+                        <id>dependency-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <nvdApiKey>60e59b9f-d53a-4679-97ae-e5f3bb8eb7ac</nvdApiKey>
+                    <failBuildOnCVSS>12.0</failBuildOnCVSS>
+                    <failBuildOnAnyVulnerability>false</failBuildOnAnyVulnerability>
+                    <failOnError>false</failOnError>
+                    <format>HTML</format>
+                    <dataDirectory>${user.home}/dependency-check-data</dataDirectory>
+                    <cveValidForHours>24</cveValidForHours>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
