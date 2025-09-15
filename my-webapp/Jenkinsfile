@@ -9,7 +9,7 @@ pipeline {
         DOCKER_IMAGE = "rukevweubio/web-application"
         DOCKER_TAG = "latest"
         DOCKER_CREDENTIAL_ID = "docker_hub"
-        GIT_BRANCH = "feature-branch"
+        GIT_BRANCH = "main"
     }
 
     stages {
@@ -21,21 +21,21 @@ pipeline {
 
         stage('Maven Build the Web Application') {
             steps {
-                      // Change directory
+                dir('my-webapp') {
                     script {
                         sh "mvn clean package -DskipTests"
-                    
+                    }
                 }
             }
         }
 
         stage('Maven Test') {
             steps {
-                      // Change directory
+                dir('my-webapp') {
                     script {
                         sh "mvn test"
                     }
-                
+                }
             }
         }
     }
