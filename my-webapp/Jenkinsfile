@@ -10,6 +10,7 @@ pipeline {
         DOCKER_TAG = "latest"
         DOCKER_CREDENTIAL_ID = "docker_hub"
         GIT_BRANCH = "main"
+        JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64"
     }
 
     stages {
