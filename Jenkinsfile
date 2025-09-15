@@ -20,7 +20,7 @@ pipeline{
     stages{
         stage(Checkout){
             steps{
-                git branch "${GIT_BRANCH}", url: "https://github.com/rukevweubio/Jenkins-Maven-Docker-ECR-Pipeline"
+                git branch : "${GIT_BRANCH}", url: "https://github.com/rukevweubio/Jenkins-Maven-Docker-ECR-Pipeline"
             }
         }
            
