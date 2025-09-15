@@ -3,7 +3,6 @@ pipeline {
 
     tools {
         maven "MAVEN"   // Must match Jenkins Maven tool configuration
-       
     }
 
     environment {
@@ -11,10 +10,6 @@ pipeline {
         DOCKER_TAG = "latest"
         DOCKER_CREDENTIAL_ID = "docker_hub"
         GIT_BRANCH = "feature-branch"
-        KUBE_CONFIG_CREDENTIALS_ID = "kube-config-credentials"
-        KUBE_NAMESPACE = "default"
-        SONARQUBE_URL = "http://your-sonarqube-url"
-        SONARQUBE_TOKEN = credentials("sonarqube-token")
     }
 
     stages {
@@ -26,16 +21,20 @@ pipeline {
 
         stage('Maven Build the Web Application') {
             steps {
-                script {
-                    sh "mvn clean package -DskipTests"
+                dir('my-webapp') {       // Change directory
+                    script {
+                        sh "mvn clean package -DskipTests"
+                    }
                 }
             }
         }
 
         stage('Maven Test') {
             steps {
-                script {
-                    sh "mvn test"
+                dir('my-webapp') {       // Change directory
+                    script {
+                        sh "mvn test"
+                    }
                 }
             }
         }
