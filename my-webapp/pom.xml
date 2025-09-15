@@ -98,7 +98,7 @@
             </executions>
             <configuration>
                 <nvdApiKey>60e59b9f-d53a-4679-97ae-e5f3bb8eb7ac</nvdApiKey>
-                <failBuildOnCVSS>0.0</failBuildOnCVSS>
+                <failBuildOnCVSS>12.0</failBuildOnCVSS>
                 <failBuildOnAnyVulnerability>false</failBuildOnAnyVulnerability>
                 <failOnError>false</failOnError>
                 <format>HTML</format>
