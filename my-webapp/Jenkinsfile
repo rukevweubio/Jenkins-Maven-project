@@ -12,10 +12,10 @@ pipeline {
         DOCKER_CREDENTIAL_ID = "docker_ubiohub"
         GIT_BRANCH = "main"
 
-        // Persistent cache directories
+        // Cache directories
         DEP_CHECK_CACHED_DIR = "${HOME}/dependency-check-data"
         MAVEN_CACHE = "${HOME}/.m2/repository"
-        TRIVY_CACHE_DIR = "${HOME}/.cache/trivy"
+        TRIVY_CACHE_DIR = "/var/lib/jenkins/.cache/trivy"
     }
 
     options {
@@ -32,8 +32,10 @@ pipeline {
         stage('Maven Build & Test') {
             steps {
                 dir('my-webapp') {
-                    sh "mvn clean package -Dmaven.repo.local=${MAVEN_CACHE}"
-                    sh "mvn test -Dmaven.repo.local=${MAVEN_CACHE}"
+                    sh """
+                        mvn clean package -Dmaven.repo.local=${MAVEN_CACHE}
+                        mvn test -Dmaven.repo.local=${MAVEN_CACHE}
+                    """
                 }
             }
             post {
@@ -58,7 +60,7 @@ pipeline {
             }
         }
 
-        stage('Dependency Check (Cached)') {
+        stage('Dependency Check') {
             steps {
                 dir('my-webapp') {
                     sh """
@@ -69,6 +71,28 @@ pipeline {
                             -Dmaven.repo.local=${MAVEN_CACHE} \
                             -Dformat=HTML
                     """
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'my-webapp/target/dependency-check-report.html', fingerprint: true
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+                    dir('my-webapp') {
+                        sh """
+                            mvn verify sonar:sonar \
+                                -Dsonar.projectKey=rukevweubio_Jenkins-Maven-Docker-ECR-Pipeline \
+                                -Dsonar.organization=rukevweubio-1 \
+                                -Dsonar.host.url=https://sonarcloud.io \
+                                -Dsonar.login=$SONAR_TOKEN \
+                                -Dmaven.repo.local=${MAVEN_CACHE}
+                        """
+                    }
                 }
             }
         }
@@ -96,11 +120,18 @@ pipeline {
         stage('Trivy Scan') {
             steps {
                 dir('my-webapp') {
-                        sh """
-                    export PATH=/usr/bin:\$PATH
-                    mkdir -p /var/lib/jenkins/.cache/trivy
-                    trivy image --severity HIGH,CRITICAL --exit-code 1 --cache-dir /var/lib/jenkins/.cache/trivy $DOCKER_IMAGE:$DOCKER_TAG || true
-                """
+                    sh """
+                        mkdir -p ${TRIVY_CACHE_DIR}
+                        trivy image --severity HIGH,CRITICAL --exit-code 1 \
+                                    --cache-dir ${TRIVY_CACHE_DIR} \
+                                    --format template --template "@contrib/html.tpl" \
+                                    -o trivy-report.html $DOCKER_IMAGE:$DOCKER_TAG
+                    """
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'my-webapp/trivy-report.html', fingerprint: true
                 }
             }
         }
