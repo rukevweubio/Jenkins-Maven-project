@@ -24,7 +24,7 @@ pipeline{
             }
         }
            
-        stage(maven build the web application ){
+        stage("maven build the web application" ){
             steps{
                 script{
                     sh" maven clean package --Detestskip"
@@ -32,7 +32,7 @@ pipeline{
             }
         }
 
-        stage(mavne test  ){
+        stage("mavne test " ){
             steps{
                 script{
                     sh" maven test"
