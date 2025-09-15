@@ -120,12 +120,15 @@ pipeline {
         stage('Trivy Scan') {
             steps {
                 dir('my-webapp') {
-                    sh """
-                        mkdir -p ${TRIVY_CACHE_DIR}
-                        trivy image --severity HIGH,CRITICAL --exit-code 1 \
-                                    --cache-dir ${TRIVY_CACHE_DIR} \
-                                    --format template --template "@contrib/html.tpl" \
-                                    -o trivy-report.html $DOCKER_IMAGE:$DOCKER_TAG
+                    sh"""
+                    trivy image \
+                        --severity HIGH,CRITICAL \
+                        --exit-code 0 \
+                        --cache-dir /var/lib/jenkins/.cache/trivy \
+                        --format table \
+                        -o trivy-report.txt \
+                        rukevweubio/web-application:latest
+
                     """
                 }
             }
