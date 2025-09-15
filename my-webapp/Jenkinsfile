@@ -141,20 +141,17 @@ pipeline {
 
         stage('Push Docker Image to AWS ECR') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'aws-jenkins', 
-                    usernameVariable: 'AWS_ACCESS_KEY_ID', 
-                    passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    sh """
-                        aws ecr describe-repositories --repository-names my-jenkin-pipeline-maven-webapp || \
-                        aws ecr create-repository --repository-name my-jenkin-pipeline-maven-webapp
+                            withAWS(credentials: 'aws-jenkins', region: "$AWS_REGION") {
+                sh """
+                    aws ecr describe-repositories --repository-names my-jenkin-pipeline-maven-webapp || \
+                    aws ecr create-repository --repository-name my-jenkin-pipeline-maven-webapp
 
-                        aws ecr get-login-password --region $AWS_REGION | \
-                        docker login --username AWS --password-stdin $ECR_REPO
+                    aws ecr get-login-password --region $AWS_REGION | \
+                    docker login --username AWS --password-stdin $ECR_REPO
 
-                        docker tag $DOCKER_IMAGE:$DOCKER_TAG $ECR_REPO:$DOCKER_TAG
-                        docker push $ECR_REPO:$DOCKER_TAG
-                    """
+                    docker tag $DOCKER_IMAGE:$DOCKER_TAG $ECR_REPO:$DOCKER_TAG
+                    docker push $ECR_REPO:$DOCKER_TAG
+                """
                 }
             }
         }
