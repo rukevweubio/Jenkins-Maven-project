@@ -1,1 +1,1 @@
-# Jenkins-Maven-Docker-ECR-Pipeline
+# Maven Application CI/CD Pipeline with Jenkins, Docker Hub, ECR, and ECS
